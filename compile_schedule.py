@@ -1,4 +1,3 @@
-from qiskit.circuit.classical.expr import Value
 from qiskit.pulse.schedule import Schedule
 
 from qiskit.pulse.instructions import Play, Delay, SetPhase, ShiftPhase, SetFrequency, ShiftFrequency
@@ -9,8 +8,6 @@ from qiskit.pulse import SymbolicPulse, Waveform
 from qiskit.pulse.library.pulse import Pulse
 
 from qiskit.pulse.channels import PulseChannel
-from sympy.core.random import sample
-from sympy.physics.units import frequency
 
 from channels import Channel as AWGChannel
 
@@ -21,7 +18,6 @@ from typing import Mapping, Iterable
 import numpy.typing as npt
 import numpy as np
 
-from typing import Tuple, Dict
 from collections import defaultdict
 
 
@@ -48,11 +44,13 @@ class Oscillator:
         self.phase = phase
         self.sample_rate = sample_rate
 
-    def get_modulation(self, start_sample: int, length: int):
+    def get_modulation(self, length: int):
         omega = 2 * np.pi * self.frequency
-        stop_sample = start_sample + length
-        time_list = np.arange(start_sample, stop_sample) / self.sample_rate
-        return np.exp(-(1j * omega * time_list  + self.phase))
+        time_list = np.arange(length) / self.sample_rate
+        result = np.exp(-1j * (omega * time_list + self.phase))
+        self.phase += omega * length / self.sample_rate
+        self.phase %= 2 * np.pi
+        return result
 
 
 class ScheduleCompiler:
