@@ -82,7 +82,7 @@ class ScheduleCompiler:
             if isinstance(instruction, Play):
                 pulse = instruction.pulse
                 envelope = get_envelope(pulse)
-                modulation = oscillator.get_modulation(start_time, pulse.duration)
+                modulation = oscillator.get_modulation(pulse.duration)
                 result.append(envelope * modulation)
             elif isinstance(instruction, Delay):
                 result.append(np.zeros(instruction.duration))
