@@ -9,9 +9,10 @@ from qiskit.pulse import SymbolicPulse, Waveform
 from qiskit.pulse.library.pulse import Pulse
 
 from qiskit.pulse.channels import PulseChannel
+from sympy.core.random import sample
 from sympy.physics.units import frequency
 
-from channels import Channel, AWGChannel, AWGIQChannel
+from channels import Channel as AWGChannel
 
 from qiskit.pulse.transforms import pad
 
@@ -49,18 +50,17 @@ class Oscillator:
 
     def get_modulation(self, start_sample: int, length: int):
         omega = 2 * np.pi * self.frequency
-        start_time = start_sample / self.sample_rate
-        stop_time = start_time + length / self.sample_rate
-        time_list = np.linspace(start_time, stop_time, length)
+        stop_sample = start_sample + length
+        time_list = np.arange(start_sample, stop_sample) / self.sample_rate
         return np.exp(-(1j * omega * time_list  + self.phase))
 
 
 class ScheduleCompiler:
-    def __init__(self, channels_mapping: Mapping[PulseChannel, Channel], sample_rate: float):
+    def __init__(self, channels_mapping: Mapping[PulseChannel, AWGChannel], sample_rate: float):
         self.channels_mapping = channels_mapping
         self.sample_rate = sample_rate
 
-    def compile_schedule(self, schedule: Schedule):
+    def compile_schedule(self, schedule: Schedule) -> Mapping[AWGChannel, npt.NDArray[complex]]:
         # Filling all gaps with Delay instructions
         schedule = pad(schedule)
 
